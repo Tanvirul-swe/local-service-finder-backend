@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: .
+      target: builder # ✅ Use the builder stage with Jest installed
+    depends_on:
+      - mongo
+    environment:
+      - MONGODB_TEST_URI=mongodb://mongo:27017/expense-tracker-test
+      - HASHING_SALT=${HASHING_SALT}
+      - JWT_ACCESS_TOKEN_SECRET=${JWT_ACCESS_TOKEN_SECRET}
+      - JWT_REFRESH_TOKEN_SECRET=${JWT_REFRESH_TOKEN_SECRET}
+    command: npm run test
+    networks:
+      - backend
+
+  mongo:
+    image: mongo:6
+    ports:
+      - '27017:27017'
+    networks:
+      - backend
+
+networks:
+  backend:
