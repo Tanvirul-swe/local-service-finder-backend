@@ -25,10 +25,12 @@ cp .env.example .env
 **Example .env:**
 
 ```env
-PORT=3000
-NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/expense-tracker
-JWT_SECRET=supersecret
+ DB_USER=
+ DB_PASS=
+ DB_NAME=
+ DB_HOST=
+ DB_PORT=3306
+ JWT_SECRET=
 ```
 
 ---
