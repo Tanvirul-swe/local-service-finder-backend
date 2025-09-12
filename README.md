@@ -1,53 +1,8 @@
-# 📊 Expense Tracker API
+# 📊 Local Service Finder API
 
 A modular, production-ready REST API for tracking expenses, built with **TypeScript**, **Express.js**, and **MongoDB**, featuring **Swagger documentation**, structured error handling, request validation, and robust logging.
 
----
 
-## 🚀 Features
-
-- ✅ **Type-safe** using TypeScript
-- 🔁 **Modular architecture** (Auth, User, Expense, Category, Budget modules)
-- 🌱 **MongoDB** with Mongoose ODM
-- 🛡️ **JWT-based authentication**
-- 📥 **Zod validation** for requests
-- 🔍 **Swagger (OpenAPI)** documentation at `/api-docs`
-- 📂 **Daily rotated logs** using Winston
-- ⚠️ **Comprehensive error handling**
-- 🧪 Pre-configured ESLint, Prettier, Husky, and lint-staged
-- 🧰 Built-in route **versioning** (`/api/v1`)
-
----
-
-## 📁 Project Structure
-
-```
-expense-tracker/
-├── src/
-│   ├── app.ts
-│   ├── server.ts
-│   ├── config/
-│   ├── routes/
-│   ├── middlewares/
-│   ├── utils/
-│   ├── types/
-│   ├── modules/
-│   │   ├── auth/v1
-│   │   ├── user/v1
-│   │   ├── expense/v1
-│   │   ├── category/v1
-│   │   └── budget/v1
-│   └── docs/
-├── logs/
-├── .env
-├── .gitignore
-├── swagger.yaml
-├── tsconfig.json
-├── package.json
-└── README.md
-```
-
----
 
 ## 📦 Getting Started
 
@@ -70,10 +25,12 @@ cp .env.example .env
 **Example .env:**
 
 ```env
-PORT=3000
-NODE_ENV=development
-MONGODB_URI=mongodb://localhost:27017/expense-tracker
-JWT_SECRET=supersecret
+ DB_USER=
+ DB_PASS=
+ DB_NAME=
+ DB_HOST=
+ DB_PORT=3306
+ JWT_SECRET=
 ```
 
 ---
