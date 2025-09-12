@@ -13,12 +13,7 @@ router.patch(
   validateRequest(updateUserValidationSchema),
   userController.updateUserProfile,
 );
-// router.patch(
-//   '/change-password',
-//   authMiddleware,
-//   validateRequest(updateUserPasswordValidationSchema),
-//   userController.updateUserPassword,
-// );
+
 const userRoute = router;
 
 export default userRoute;

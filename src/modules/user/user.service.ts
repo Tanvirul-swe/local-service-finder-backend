@@ -7,6 +7,7 @@ import {
 } from '@src/database/models/User.model';
 import { ApiError } from '@src/utils/ApiError';
 import { passwordHash } from '@src/utils/hashing';
+import logger from '@src/utils/logger';
 
 /**
  * Creates a new user with the provided input data.
@@ -20,7 +21,7 @@ export const createUser = async (
   input: TCreateUserInput,
 ): Promise<Omit<TUser, 'password'>> => {
   input.password = await passwordHash(input.password);
-
+  logger.info('====Request data: ', input);
   if (input && input.email) {
     const existingUser = await db.User.findOne({
       where: { email: input.email.trim() },
@@ -101,27 +102,3 @@ export const updateUser = async (
   return findUser;
 };
 
-// export const changePassword = async (
-//   userId: string,
-//   currentPassword: string,
-//   newPassword: string,
-// ): Promise<Omit<TUser, 'password'>> => {
-//   const user = await db.User.findByPk(userId);
-//   if (!user?.dataValues) {
-//     throw new ApiError('User not found', HttpStatus.NOT_FOUND);
-//   }
-
-//   const dbPassword = user.dataValues.password;
-
-//   const isPasswordValid = await passwordCompare(currentPassword, dbPassword);
-//   if (!isPasswordValid) {
-//     throw new ApiError('Current password is incorrect', HttpStatus.BAD_REQUEST);
-//   }
-
-//   user.password = await passwordHash(newPassword);
-//   await user.save();
-
-//   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-//   const { password: _password, ...userWithoutPassword } = user.toObject();
-//   return userWithoutPassword;
-// };

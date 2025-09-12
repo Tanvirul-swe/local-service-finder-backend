@@ -62,15 +62,13 @@ export const updateUserProfile = catchAsync(async (req, res) => {
     throw new ApiError('No data provided for update', HttpStatus.BAD_REQUEST);
   }
 
-  const name = req.body?.name;
+  const firstName = req.body?.first_name;
   const email = req.body?.email;
-  const avatarUrl = req.body?.avatarUrl;
   const password = req.body?.password;
 
   const result = await userService.updateUser(userId, {
-    name,
+    firstName,
     email,
-    avatarUrl,
     password,
   });
 
