@@ -9,6 +9,7 @@ import {
   verifyRefreshToken,
 } from '@src/utils/jwt';
 import logger from '@src/utils/logger';
+import { Logger } from 'winston';
 
 /**
  * Authenticates a user with the provided email and password.
@@ -25,9 +26,11 @@ export const loginUser = async (email: string, password: string) => {
       HttpStatus.BAD_REQUEST,
     );
   }
+  logger.info(`Email from request body: ${email}`);
+  logger.info(`Password from request body: ${password}`);
 
   const user = await db.User.findOne({ where: { email: email.trim() } });
-  logger.info('user: ', user);
+  logger.info(`User found: ${user ? 'Yes' : 'No'}`);
 
   if (!user) {
     throw new ApiError('User not found', HttpStatus.NOT_FOUND);
@@ -42,9 +45,10 @@ export const loginUser = async (email: string, password: string) => {
   const payload = { userId: userWithoutPassword.id };
 
   const accessToken = generateAccessToken(payload);
+  console.log('Generated access token: ', accessToken);
   const refreshToken = generateRefreshToken(payload);
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken , user: user};
 };
 
 export const getAccessToken = async (refreshToken: string) => {

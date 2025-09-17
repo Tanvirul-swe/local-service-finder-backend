@@ -6,9 +6,12 @@ import { generateAccessToken, verifyRefreshToken } from '@src/utils/jwt';
 import { sendSuccess } from '@src/utils/sendResponse';
 import { cookieOptions } from './auth.constant';
 import * as authService from './auth.service';
+import logger from '@src/utils/logger';
 
 export const loginUser = catchAsync(async (req, res) => {
   const { email, password } = req.body;
+
+
   const result = await authService.loginUser(email, password);
   res.cookie('refreshToken', result.refreshToken, {
     ...cookieOptions,

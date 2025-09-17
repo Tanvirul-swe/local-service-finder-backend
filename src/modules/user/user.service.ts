@@ -51,9 +51,25 @@ export const createUser = async (
  */
 export const getUserById = async (
   userId: number,
-): Promise<Omit<TUser, 'password'> | null> => {
-  const user = await db.User.findByPk(userId);
-  return user ? user.dataValues : null;
+): Promise<Omit<TUser, 'password'> & {
+  packages?: any[],
+  portfolios?: any[],
+  certifications?: any[],
+  requestModifications?: any[],
+  serviceRequestsAsProvider?: any[]
+} | null> => {
+  const user = await db.User.findByPk(userId, {
+    attributes: { exclude: ['password'] }, // exclude password
+    include: [
+      { model: db.Package, as: 'packages' },
+      { model: db.Portfolio, as: 'portfolios' },
+      { model: db.Certification, as: 'certifications' },
+      { model: db.RequestModification, as: 'requestModifications' },
+      { model: db.ServiceRequest, as: 'serviceRequestsAsProvider' },
+    ],
+  });
+
+  return user ? user.get({ plain: true }) : null;
 };
 
 /**

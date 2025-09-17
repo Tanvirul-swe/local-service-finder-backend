@@ -3,6 +3,7 @@ import { ApiError } from '@src/utils/ApiError';
 import { catchAsync } from '@src/utils/catchAsync';
 import { sendSuccess } from '@src/utils/sendResponse';
 import * as userService from './user.service';
+import { TUser } from '@src/database/models/User.model';
 
 /**
  * Handles the creation of a new user.
@@ -52,6 +53,7 @@ export const getUserProfile = catchAsync(async (req, res) => {
     result,
   );
 });
+
 export const updateUserProfile = catchAsync(async (req, res) => {
   const userId = req.user?.userId;
   if (!userId) {
@@ -62,18 +64,27 @@ export const updateUserProfile = catchAsync(async (req, res) => {
     throw new ApiError('No data provided for update', HttpStatus.BAD_REQUEST);
   }
 
-  const firstName = req.body?.first_name;
-  const email = req.body?.email;
-  const password = req.body?.password;
+  // Map incoming body fields to your model fields
+  const updateData: Partial<TUser> = {
+    firstName: req.body.firstName ?? req.body.first_name,
+    lastName: req.body.lastName ?? req.body.last_name,
+    email: req.body.email,
+    phone: req.body.phone,
+    password: req.body.password,
+    address: req.body.address,
+    about: req.body.about,
+  };
 
-  const result = await userService.updateUser(userId, {
-    firstName,
-    email,
-    password,
-  });
+  // Remove undefined fields so they don’t overwrite existing data
+  Object.keys(updateData).forEach(
+    (key) => updateData[key as keyof TUser] === undefined && delete updateData[key as keyof TUser]
+  );
+
+  const result = await userService.updateUser(userId, updateData);
 
   sendSuccess(res, 'User profile updated successfully', HttpStatus.OK, result);
 });
+
 
 // export const updateUserPassword = catchAsync(async (req, res) => {
 //   const userId = req.user?.userId;
