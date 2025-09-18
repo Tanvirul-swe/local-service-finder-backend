@@ -46,3 +46,36 @@ export const updatePackageValidationSchema = z.object({
   price: z.string().optional(),
   userId: z.number().int().optional(),
 });
+
+
+
+// ✅ Create Portfolio Validation
+export const createPortfolioValidationSchema = z.object({
+  userId: z.number().int(),
+  title: z.string().min(2, 'Title must be at least 2 characters'),
+  description: z.string().min(5, 'Description must be at least 5 characters'),
+  startDate: z.string().refine(
+    (date) => !isNaN(Date.parse(date)),
+    'Start date must be a valid date (YYYY-MM-DD)'
+  ),
+  endDate: z.string().refine(
+    (date) => !isNaN(Date.parse(date)),
+    'End date must be a valid date (YYYY-MM-DD)'
+  ),
+  attachments: z.array(z.string()).optional(), // optional array of file names
+});
+
+// ✅ Update Portfolio Validation
+export const updatePortfolioValidationSchema = z.object({
+  title: z.string().min(2).optional(),
+  description: z.string().min(5).optional(),
+  startDate: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), 'Start date must be valid')
+    .optional(),
+  endDate: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), 'End date must be valid')
+    .optional(),
+  attachments: z.array(z.string()).optional(),
+});

@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { authMiddleware } from '@src/middlewares/auth';
 import validateRequest from '@src/middlewares/validateRequest';
 import * as serviceController from './service.controller';
-import { createCategoryValidationSchema, createPackageValidationSchema, updateCategoryValidationSchema, updatePackageValidationSchema } from './service.validation';
+import { createCategoryValidationSchema, createPackageValidationSchema, createPortfolioValidationSchema, updateCategoryValidationSchema, updatePackageValidationSchema, updatePortfolioValidationSchema } from './service.validation';
 
 const router = Router();
 
@@ -33,24 +33,44 @@ router.post(
 );
 
 // Get all packages
-router.get('/packages', serviceController.getAllPackages);
+// router.get('/packages', serviceController.getPackagesByUserId);
 
 // Get package by ID
-router.get('/packages/:id', serviceController.getPackageById);
+// router.get('/packages/:id', serviceController.getPackagesByUserId);
 
 // Get package by user ID
-router.get('/packages/:userId', serviceController.getPackages);
+router.get('/packages/:userId', serviceController.getPackagesByUserId);
 
 // Update package by ID
 router.patch(
-  '/packages/:id',
+  '/updatePackage/:id',
   authMiddleware,
   validateRequest(updatePackageValidationSchema),
-  serviceController.getPackageById
+  serviceController.updatePackage
 );
 
 // Delete package by ID
-router.delete('/packages/:id', authMiddleware, serviceController.deletePackage);
+router.delete('/deletePackage/:id', authMiddleware, serviceController.deletePackage);
+
+//============================================ Portfolio Routes ================================
+router.post(
+  '/portfolioCreate',
+  authMiddleware,
+  validateRequest(createPortfolioValidationSchema),
+  serviceController.createPortfolio
+);
+
+router.patch(
+  '/updatePortfolio/:id',
+  authMiddleware,
+  validateRequest(updatePortfolioValidationSchema),
+  serviceController.updatePortfolio
+);
+// Get portfolio by user ID
+router.get('/portfolios/:userId', serviceController.getPortfoliosByUserId);
+
+// Delete portfolio by ID
+router.delete('/deletePortfolio/:id', authMiddleware, serviceController.deletePortfolio);
 
 
 const serviceRoute = router;

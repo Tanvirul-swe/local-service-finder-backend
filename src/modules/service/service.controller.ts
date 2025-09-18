@@ -70,96 +70,82 @@ export const deleteCategory = catchAsync(async (req: Request, res: Response) => 
  * 2. No other package with same price for the user
  * 3. Maximum 5 packages per user
  */
-export const createPackage = async (data: TCreatePackageInput) => {
-    const { name, price, userId } = data;
-    
-    logger.info(`Creating package for user ID: ${userId} with name: ${name} and price: ${price}`);
-    // Check user exists
-    const user = await db.User.findByPk(userId);
-    if (!user) throw new ApiError('User not found', HttpStatus.NOT_FOUND);
+export const createPackage = catchAsync(async (req: Request, res: Response) => {
+    const { name, description, price, userId } = req.body;
 
-    // Check package count
-    const packageCount = await db.Package.count({ where: { userId } });
-    if (packageCount >= 5) {
-        throw new ApiError('Maximum 5 packages allowed per user', HttpStatus.BAD_REQUEST);
-    }
+    const packageItem = await serviceService.createPackage({
+        name,
+        description,
+        price,
+        userId,
+    });
 
-    // Check for same package name
-    const nameExists = await db.Package.findOne({ where: { userId, name } });
-    if (nameExists) {
-        throw new ApiError('You already have a package with this name', HttpStatus.BAD_REQUEST);
-    }
+    sendSuccess(res, 'Package created successfully', HttpStatus.CREATED, packageItem);
+});
+// Update Package
+export const updatePackage = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { name, description, price, userId } = req.body;
 
-    // Check for same price
-    const priceExists = await db.Package.findOne({ where: { userId, price } });
-    if (priceExists) {
-        throw new ApiError('You already have a package with this price', HttpStatus.BAD_REQUEST);
-    }
+  const packageItem = await serviceService.updatePackage(Number(id), {
+    name,
+    description,
+    price,
+    userId,
+  });
 
-    const packageItem = await db.Package.create(data);
-    return packageItem;
-};
-
-/**
- * Update package with validation:
- * Only allow update once every 7 days
- */
-export const updatePackage = async (id: number, data: TUpdatePackageInput) => {
-    const packageItem = await db.Package.findByPk(id) as (typeof db.Package.prototype) & { updatedAt: Date, createdAt: Date };
-    if (!packageItem) throw new ApiError('Package not found', HttpStatus.NOT_FOUND);
-
-    const lastUpdated = packageItem.updatedAt || packageItem.createdAt;
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 7) {
-        throw new ApiError('Package can only be updated once every 7 days', HttpStatus.BAD_REQUEST);
-    }
-
-    await packageItem.update(data);
-    return packageItem;
-};
-
-/**
- * Delete a package
- */
-export const deletePackage = async (id: number) => {
-    const packageItem = await db.Package.findByPk(id);
-    if (!packageItem) throw new ApiError('Package not found', HttpStatus.NOT_FOUND);
-
-    await packageItem.destroy();
-};
-
-/**
- * Get all packages
- */
-export const getAllPackages = async () => {
-    return db.Package.findAll();
-};
-
-/**
- * Get package by ID
- */
-export const getPackageById = async (id: number) => {
-    const packageItem = await db.Package.findByPk(id);
-    if (!packageItem) throw new ApiError('Package not found', HttpStatus.NOT_FOUND);
-    return packageItem;
-};
-
-// Get all packages for a user
-export const getPackages = catchAsync(async (req: Request, res: Response) => {
-    const userId = Number(req.query.userId);
-    if (!userId) {
-        throw new ApiError('userId query parameter is required', HttpStatus.BAD_REQUEST);
-    }
-
-    const packages = await db.Package.findAll({ where: { userId } });
-    sendSuccess(res, 'Packages fetched successfully', HttpStatus.OK, packages);
+  sendSuccess(res, 'Package updated successfully', HttpStatus.OK, packageItem);
 });
 
-/**
- * Helper: Get user by ID
- */
-export const getUserById = async (id: number) => {
-    return db.User.findByPk(id);
-};
+// Delete Package
+export const deletePackage = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  await serviceService.deletePackage(Number(id));
+  sendSuccess(res, 'Package deleted successfully', HttpStatus.OK, );
+});
+
+// Get Packages By User ID
+export const getPackagesByUserId = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+
+  const packages = await serviceService.getPackagesByUserId(Number.parseInt(userId, 10));
+  sendSuccess(res, 'Packages fetched successfully', HttpStatus.OK, packages);
+});
+
+
+// Create portfolio
+export const createPortfolio = catchAsync(async (req: Request, res: Response) => {
+  const { userId, title, description, startDate, endDate, attachments } = req.body;
+
+  const portfolio = await serviceService.createPortfolio(
+    { userId, title, description, startDate, endDate },
+    attachments
+  );
+
+  sendSuccess(res, 'Portfolio created successfully', HttpStatus.CREATED, portfolio);
+});
+
+// Update portfolio
+export const updatePortfolio = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const portfolio = await serviceService.updatePortfolio(Number(id), req.body);
+
+  sendSuccess(res, 'Portfolio updated successfully', HttpStatus.OK, portfolio);
+});
+
+// Delete portfolio
+export const deletePortfolio = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  await serviceService.deletePortfolio(Number(id));
+
+  sendSuccess(res, 'Portfolio deleted successfully', HttpStatus.OK, null);
+});
+
+// Get portfolios by userId
+export const getPortfoliosByUserId = catchAsync(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const portfolios = await serviceService.getPortfoliosByUserId(Number(userId));
+
+  sendSuccess(res, 'Portfolios fetched successfully', HttpStatus.OK, portfolios);
+});
