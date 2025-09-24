@@ -1,7 +1,9 @@
 import { DataTypes, Model, Optional, Sequelize } from 'sequelize';
+import models from '.';
 
 export type TServiceRequest = {
   id: number;
+  userId: number; // NEW: the customer who created the request
   serviceProviderId: number;
   packageId: number;
   urgentLevel: number;
@@ -23,6 +25,7 @@ export type TUpdateServiceRequestInput = Partial<TCreateServiceRequestInput>;
 
 class ServiceRequest extends Model<TServiceRequest, TCreateServiceRequestInput> implements TServiceRequest {
   public id!: number;
+  public userId!: number; // NEW
   public serviceProviderId!: number;
   public packageId!: number;
   public urgentLevel!: number;
@@ -37,11 +40,13 @@ class ServiceRequest extends Model<TServiceRequest, TCreateServiceRequestInput> 
   public readonly updatedAt!: Date | null;
 
   static associate(models: any) {
+    ServiceRequest.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' }); // NEW
     ServiceRequest.belongsTo(models.User, { foreignKey: 'service_provider_id', as: 'serviceProvider' });
     ServiceRequest.belongsTo(models.Package, { foreignKey: 'package_id', as: 'package' });
     ServiceRequest.hasMany(models.RequestModification, { foreignKey: 'service_request_id', as: 'modifications' });
   }
 }
+
 
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   ServiceRequest.init(
@@ -50,6 +55,11 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         type: dataTypes.BIGINT,
         autoIncrement: true,
         primaryKey: true,
+      },
+      userId: { // NEW FIELD
+        type: dataTypes.BIGINT,
+        allowNull: true,
+        field: 'user_id',
       },
       serviceProviderId: {
         type: dataTypes.BIGINT,

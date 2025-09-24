@@ -49,6 +49,7 @@ class User extends Model<TUser, TCreateUserInput> implements TUser {
   }
 }
 
+
 export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
   User.init(
     {

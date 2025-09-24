@@ -79,3 +79,61 @@ export const updatePortfolioValidationSchema = z.object({
     .optional(),
   attachments: z.array(z.string()).optional(),
 });
+
+
+
+// ✅ Create Certification Validation
+export const createCertificationValidationSchema = z.object({
+  userId: z.number().int('User ID must be a number'),
+  title: z.string().min(2, 'Title must be at least 2 characters long'),
+  issuer: z.string().min(2, 'Issuer must be at least 2 characters long'),
+  earnedOn: z.string().refine(
+    (date) => !isNaN(Date.parse(date)),
+    'Earned On date must be a valid date (YYYY-MM-DD)'
+  ),
+  expiresOn: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), 'Expires On date must be valid (YYYY-MM-DD)')
+    .optional(),
+});
+
+// ✅ Update Certification Validation
+export const updateCertificationValidationSchema = z.object({
+  title: z.string().min(2).optional(),
+  issuer: z.string().min(2).optional(),
+  earnedOn: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), 'Earned On date must be valid')
+    .optional(),
+  expiresOn: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), 'Expires On date must be valid')
+    .optional(),
+});
+
+
+// ✅ Create SubCategory Validation
+export const createSubCategoryValidationSchema = z.object({
+  categoryId: z.number().int('Category ID must be a number'),
+  name: z.string().min(2, 'SubCategory name must be at least 2 characters').max(255),
+});
+
+// ✅ Update SubCategory Validation
+export const updateSubCategoryValidationSchema = z.object({
+  categoryId: z.number().int().optional(),
+  name: z.string().min(2).max(255).optional(),
+});
+
+
+export const createReviewValidationSchema = z.object({
+  userId: z.number().int(),
+  providerId: z.number().int(),
+  serviceRequestId: z.number().int(),
+  rating: z.number().min(1).max(5, 'Rating must be between 1 and 5'),
+  comment: z.string().min(2).max(1000).optional(),
+});
+
+export const updateReviewValidationSchema = z.object({
+  rating: z.number().min(1).max(5).optional(),
+  comment: z.string().min(2).max(1000).optional(),
+});

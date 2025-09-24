@@ -43,4 +43,7 @@ const config: Record<string, IDatabaseConfig> = {
   },
 };
 
+// Log the configuration to verify values are loaded correctly
+console.log('Database Configuration:', config);
+
 export default config;
