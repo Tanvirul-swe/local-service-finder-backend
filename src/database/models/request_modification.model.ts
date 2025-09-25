@@ -12,9 +12,9 @@ export type TRequestModification = {
     updatedAt: Date | null;
 };
 
-export type TCreateRequestModificationInput = Optional<
+export type TCreateRequestModificationInput = Omit<
     TRequestModification,
-    'id' | 'timeRequired' | 'createdAt' | 'updatedAt'
+    'id' | 'status' | 'serviceRequestId' | 'createdAt' | 'updatedAt'
 >;
 export type TUpdateRequestModificationInput = Partial<TCreateRequestModificationInput>;
 

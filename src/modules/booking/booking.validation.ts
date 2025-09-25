@@ -43,3 +43,15 @@ export const updateServiceRequestValidationSchema = z.object({
     .optional(),
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED', 'COMPLETED']).optional(),
 });
+
+
+export const createModificationValidationSchema = z.object({
+  reason: z.string().min(5, "Reason must be at least 5 characters"),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
+  timeRequired: z.string().optional(),
+  serviceRequestId: z.number().int({ message: 'Service request ID must be a number' }),
+});
+
+export const updateModificationValidationSchema = z.object({
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
+});

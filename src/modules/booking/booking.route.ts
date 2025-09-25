@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '@src/middlewares/auth';
 import validateRequest from '@src/middlewares/validateRequest';
-import { createServiceRequestValidationSchema, updateServiceRequestValidationSchema } from './booking.validation';
+import { createModificationValidationSchema, createServiceRequestValidationSchema, updateModificationValidationSchema, updateServiceRequestValidationSchema } from './booking.validation';
 import * as bookingController from './booking.controller';
 
 const router = Router();
@@ -60,6 +60,33 @@ router.get('/user/:userId', authMiddleware, bookingController.getServiceRequests
 
 // Get request by service provider ID can be added similarly
 router.get('/provider/:providerId', authMiddleware, bookingController.getServiceRequestsByProviderId);
+
+//==========Service request modification===
+router.post(
+    '/modifications',
+    authMiddleware,
+    validateRequest(createModificationValidationSchema),
+    bookingController.createModification
+);
+
+router.get(
+    '/modifications/:serviceRequestId',
+    authMiddleware,
+    bookingController.getModifications
+);
+
+router.patch(
+    '/modifications/:id',
+    authMiddleware,
+    validateRequest(updateModificationValidationSchema),
+    bookingController.updateModification
+);
+
+router.delete(
+    '/modifications/:id',
+    authMiddleware,
+    bookingController.deleteModification
+);
 
 const bookingRoute = router;
 
