@@ -4,6 +4,7 @@ import { catchAsync } from '@src/utils/catchAsync';
 import { sendSuccess } from '@src/utils/sendResponse';
 import * as userService from './user.service';
 import { TUser } from '@src/database/models/User.model';
+import { log } from 'console';
 
 /**
  * Handles the creation of a new user.
@@ -84,6 +85,42 @@ export const updateUserProfile = catchAsync(async (req, res) => {
 
   sendSuccess(res, 'User profile updated successfully', HttpStatus.OK, result);
 });
+
+/**
+ * Handles retrieval of a user by their ID.
+ *
+ * @param req - Express request object with user ID in params.
+ * @param res - Express response object.
+ * @returns A Promise that resolves when the user is retrieved and a success response is sent.
+ */
+export const getUserByUserId = catchAsync(async (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  if (isNaN(userId)) {
+    throw new ApiError('Invalid user ID', HttpStatus.BAD_REQUEST);
+  }
+
+  const result = await userService.getUserById(userId);
+  if (!result) {
+    throw new ApiError('User not found', HttpStatus.NOT_FOUND);
+  }
+
+  sendSuccess(res, 'User retrieved successfully', HttpStatus.OK, result);
+});
+
+// Top rated providers
+export const getTopRatedProviders = catchAsync(async (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 5;
+  log(`Fetching top rated providers with limit: ${limit}`);
+  if (isNaN(limit) || limit <= 0) {
+    throw new ApiError('Invalid limit value', HttpStatus.BAD_REQUEST);
+  }
+
+  const result = await userService.getTopRatedProviders(limit);
+  sendSuccess(res, 'Top rated providers retrieved successfully', HttpStatus.OK, result);
+});
+
+
+
 
 
 // export const updateUserPassword = catchAsync(async (req, res) => {

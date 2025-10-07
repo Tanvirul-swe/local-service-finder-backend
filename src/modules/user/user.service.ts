@@ -56,21 +56,107 @@ export const getUserById = async (
   portfolios?: any[],
   certifications?: any[],
   requestModifications?: any[],
-  serviceRequestsAsProvider?: any[]
+  serviceRequestsAsProvider?: any[],
+  category?: any,
+  receivedReviews?: any[],
+  total_rating_count?: number,
+  avg_rating?: number,
+  repeatClients?: number,
+  jobsCompleted?: number,
+  responseTime?: string | null,
+  onTimeRate?: string | null,
+  ongoingServices?: any[],
 } | null> => {
   const user = await db.User.findByPk(userId, {
-    attributes: { exclude: ['password'] }, // exclude password
+    attributes: { exclude: ['password'] },
     include: [
       { model: db.Package, as: 'packages' },
       { model: db.Portfolio, as: 'portfolios' },
       { model: db.Certification, as: 'certifications' },
       { model: db.RequestModification, as: 'requestModifications' },
       { model: db.ServiceRequest, as: 'serviceRequestsAsProvider' },
+      {
+        model: db.Category,
+        as: 'category',
+        include: [{ model: db.SubCategory, as: 'subCategories' }],
+      },
+      {
+        model: db.Review,
+        as: 'receivedReviews',
+        include: [
+          {
+            model: db.User,
+            as: 'user',
+            attributes: ['id', 'firstName', 'lastName', 'email'],
+          }
+        ],
+      },
     ],
   });
 
-  return user ? user.get({ plain: true }) : null;
+  if (!user) return null;
+
+  const plainUser = user.get({ plain: true });
+
+  // Reviews metrics
+  const reviews = plainUser.receivedReviews || [];
+  const total_rating_count = reviews.length;
+  const avg_rating =
+    total_rating_count > 0
+      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / total_rating_count
+      : 0;
+
+  // Service requests metrics
+  const serviceRequests = plainUser.serviceRequestsAsProvider || [];
+  
+  // Jobs completed
+  const jobsCompleted = serviceRequests.filter((r: any) => r.status === 'COMPLETED').length;
+
+  // Repeat clients
+  const userBookingCount: Record<number, number> = {};
+  serviceRequests.forEach((r: any) => {
+    userBookingCount[r.userId] = (userBookingCount[r.userId] || 0) + 1;
+  });
+  const repeatClients = Object.values(userBookingCount).filter(count => count > 1).length;
+
+  // Response time
+  const respondedRequests = serviceRequests.filter((r: any) => r.status !== 'PENDING');
+  const responseTimes = respondedRequests.map((r: any) => {
+    const created = new Date(r.createdAt).getTime();
+    const updated = new Date(r.updatedAt).getTime();
+    return (updated - created) / 1000 / 3600; // hours
+  });
+  const responseTime =
+  responseTimes.length > 0
+    ? `${(responseTimes.reduce((a: number, b: number) => a + b, 0) / responseTimes.length).toFixed(1)} hours`
+    : 'N/A'; // or "0 hours" or "Not responded yet"
+
+  // On-time rate
+  const onTimeCount = serviceRequests.filter((r: any) => {
+    if (r.status !== 'COMPLETED') return false;
+    const completedAt = new Date(r.updatedAt);
+    const preferred = new Date(`${r.preferredDate}T${r.preferredTime}`);
+    return completedAt <= preferred;
+  }).length;
+  const onTimeRate = serviceRequests.length > 0 ? `${((onTimeCount / serviceRequests.length) * 100).toFixed(0)}%` : null;
+
+  // Ongoing services: PENDING or APPROVED
+const ongoingServicesCount = serviceRequests.filter(
+  (r: any) => r.status === 'PENDING' || r.status === 'APPROVED'
+).length;
+  return {
+    ...plainUser,
+    total_rating_count,
+    avg_rating: Number(avg_rating.toFixed(1)),
+    repeatClients,
+    jobsCompleted,
+    responseTime,
+    onTimeRate,
+    ongoingServicesCount,
+  };
 };
+
+
 
 /**
  * Retrieves a user by their email address, excluding the password field from the result.
@@ -118,3 +204,108 @@ export const updateUser = async (
   return findUser;
 };
 
+
+
+export const getTopRatedProviders = async (
+  limit: number = 10, // number of providers to return
+): Promise<(Omit<TUser, 'password'> & {
+  packages?: any[],
+  portfolios?: any[],
+  certifications?: any[],
+  requestModifications?: any[],
+  serviceRequestsAsProvider?: any[],
+  category?: any,
+  receivedReviews?: any[],
+  total_rating_count?: number,
+  avg_rating?: number,
+  repeatClients?: number,
+  jobsCompleted?: number,
+  responseTime?: string | null,
+  onTimeRate?: string | null,
+  ongoingServicesCount?: number,
+})[]> => {
+
+  // Fetch all providers with their reviews and other associations
+  const providers = await db.User.findAll({
+    where: { role: 'PROVIDER' },
+    attributes: { exclude: ['password'] },
+    include: [
+      { model: db.Package, as: 'packages' },
+      { model: db.Portfolio, as: 'portfolios' },
+      { model: db.Certification, as: 'certifications' },
+      { model: db.RequestModification, as: 'requestModifications' },
+      { model: db.ServiceRequest, as: 'serviceRequestsAsProvider' },
+      {
+        model: db.Category,
+        as: 'category',
+        include: [{ model: db.SubCategory, as: 'subCategories' }],
+      },
+      {
+        model: db.Review,
+        as: 'receivedReviews',
+        include: [
+          { model: db.User, as: 'user', attributes: ['id','firstName','lastName','email'] }
+        ],
+      },
+    ],
+  });
+
+  // Map each provider and calculate metrics
+  const providerList = providers.map((provider: any) => {
+    const p = provider.get({ plain: true });
+
+    const reviews = p.receivedReviews || [];
+    const total_rating_count = reviews.length;
+    const avg_rating = total_rating_count > 0
+      ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / total_rating_count
+      : 0;
+
+    const serviceRequests = p.serviceRequestsAsProvider || [];
+    const jobsCompleted = serviceRequests.filter((r: any) => r.status === 'COMPLETED').length;
+
+    const userBookingCount: Record<number, number> = {};
+    serviceRequests.forEach((r: any) => {
+      userBookingCount[r.userId] = (userBookingCount[r.userId] || 0) + 1;
+    });
+    const repeatClients = Object.values(userBookingCount).filter(c => c > 1).length;
+
+    const respondedRequests = serviceRequests.filter((r: any) => r.status !== 'PENDING');
+    const responseTimes = respondedRequests.map((r: any) => {
+      const created = new Date(r.createdAt).getTime();
+      const updated = new Date(r.updatedAt).getTime();
+      return (updated - created) / 1000 / 3600; // hours
+    });
+    const responseTime =
+      responseTimes.length > 0
+        ? `${(responseTimes.reduce((a: number, b: number) => a + b, 0) / responseTimes.length).toFixed(1)} hours`
+        : 'N/A';
+
+    const onTimeCount = serviceRequests.filter((r: any) => {
+      if (r.status !== 'COMPLETED') return false;
+      const completedAt = new Date(r.updatedAt);
+      const preferred = new Date(`${r.preferredDate}T${r.preferredTime}`);
+      return completedAt <= preferred;
+    }).length;
+    const onTimeRate = serviceRequests.length > 0 ? `${((onTimeCount / serviceRequests.length) * 100).toFixed(0)}%` : 'N/A';
+
+    const ongoingServicesCount = serviceRequests.filter(
+      (r: any) => r.status === 'PENDING' || r.status === 'APPROVED'
+    ).length;
+
+    return {
+      ...p,
+      total_rating_count,
+      avg_rating: Number(avg_rating.toFixed(1)),
+      repeatClients,
+      jobsCompleted,
+      responseTime,
+      onTimeRate,
+      ongoingServicesCount,
+    };
+  });
+
+  // Sort by avg_rating descending and limit
+  providerList.sort((a,b) => (b.avg_rating || 0) - (a.avg_rating || 0));
+
+  return providerList.slice(0, limit);
+};

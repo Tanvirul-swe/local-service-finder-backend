@@ -9,7 +9,7 @@ async function startServer() {
     console.log('Database connected successfully ✅');
 
     // Sync models (remove force: true in production)
-    // await db.sequelize.sync({ alter: true, logging: console.log ,force: true,});
+    // await db.sequelize.sync({ alter: true, logging: console.log});
 
     console.log('Database synced successfully ✅');
 

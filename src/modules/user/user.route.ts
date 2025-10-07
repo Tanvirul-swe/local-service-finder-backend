@@ -13,6 +13,11 @@ router.patch(
   validateRequest(updateUserValidationSchema),
   userController.updateUserProfile,
 );
+router.get('/top-rated',userController.getTopRatedProviders);
+
+// Get user details by id
+router.get('/:id',userController.getUserByUserId);
+// Top rated providers
 
 const userRoute = router;
 

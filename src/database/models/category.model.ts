@@ -21,6 +21,8 @@ class Category extends Model<TCategory, TCreateCategoryInput> implements TCatego
 
   static associate(models: any) {
     Category.hasMany(models.SubCategory, { foreignKey: 'category_id', as: 'subCategories' });
+    Category.hasMany(models.User, { foreignKey: 'category_id', as: 'users' });
+
   }
 }
 

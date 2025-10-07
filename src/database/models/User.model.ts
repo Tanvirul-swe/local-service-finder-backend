@@ -12,6 +12,7 @@ export type TUser = {
   about?: string | null;
   signUpType: 'EMAIL' | 'GOOGLE' | 'FACEBOOK';
   status: 'APPROVE' | 'PENDING' | 'BLOCKED';
+  categoryId?: number | null;
   activeStatus: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +20,7 @@ export type TUser = {
 
 export type TCreateUserInput = Optional<
   TUser,
-  'id' | 'lastName' | 'phone' | 'address' | 'about' | 'activeStatus' | 'createdAt' | 'updatedAt'
+  'id' | 'lastName' | 'phone' | 'address' | 'about' | 'activeStatus' | 'createdAt' | 'updatedAt' | 'categoryId'
 >;
 export type TUpdateUserInput = Partial<TCreateUserInput>;
 
@@ -35,6 +36,7 @@ class User extends Model<TUser, TCreateUserInput> implements TUser {
   public about!: string | null;
   public signUpType!: 'EMAIL' | 'GOOGLE' | 'FACEBOOK';
   public status!: 'APPROVE' | 'PENDING' | 'BLOCKED';
+  public categoryId!: number | null;
   public activeStatus!: boolean;
 
   public readonly createdAt!: Date;
@@ -46,6 +48,10 @@ class User extends Model<TUser, TCreateUserInput> implements TUser {
     User.hasMany(models.Certification, { foreignKey: 'user_id', as: 'certifications' });
     User.hasMany(models.RequestModification, { foreignKey: 'user_id', as: 'requestModifications' });
     User.hasMany(models.ServiceRequest, { foreignKey: 'service_provider_id', as: 'serviceRequestsAsProvider' });
+    User.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
+    User.hasMany(models.Review, { foreignKey: 'user_id', as: 'givenReviews' });
+    User.hasMany(models.Review, { foreignKey: 'provider_id', as: 'receivedReviews' });
+
   }
 }
 
@@ -103,6 +109,17 @@ export default (sequelize: Sequelize, dataTypes: typeof DataTypes) => {
         type: dataTypes.ENUM('APPROVE', 'PENDING', 'BLOCKED'),
         allowNull: false,
         defaultValue: 'APPROVE',
+      },
+      categoryId: {
+        type: dataTypes.BIGINT,
+        allowNull: true,
+        field: 'category_id',
+        references: {
+          model: 'category',
+          key: 'id',
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
       },
       activeStatus: {
         type: dataTypes.BOOLEAN,
